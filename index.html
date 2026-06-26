@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quem é essa Raça? - Jogo de Adivinhação</title>
+    <style>
+        /* Variáveis de cores para manter a identidade visual unificada */
+        :root {
+            --primary-color: #8b4513;
+            --secondary-color: #8b4513;
+            --background-color: #a1dee0;
+            --card-background: #ffffff;
+            --text-accent: #f4a460;
+            --history-bg: rgb(238, 219, 184);
+            --table-header: #f5ebe0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            color: var(--secondary-color);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* REQUISITO 1: Layout estruturado em duas colunas lado a lado e centralizado */
+        .main-wrapper {
+            display: flex;
+            flex-direction: row-reverse; /* Coloca o histórico à esquerda e o jogo à direita */
+            width: 100%;
+            max-width: 1200px;
+            gap: 30px;
+            align-items: center; /* Centraliza verticalmente o histórico e o jogo */
+            justify-content: center;
+            margin: auto 0; /* Ajuda no alinhamento vertical na tela */
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1.1; /* Dá um pouco mais de destaque para o bloco do jogo */
+            gap: 20px;
+            width: 100%;
+        }
+
+        .busca-container {
+            width: 100%;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid var(--primary-color);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--primary-color);
+            color: var(--text-accent);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--text-accent);
+            color: var(--secondary-color);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .dog-card {
+            background: var(--card-background);
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 25px;
+            text-align: center;
+            width: 100%;
+            display: none; 
+        }
+
+        /* Caixa de imagem ampliada para maior destaque visual */
+        .img-container {
+            width: 100%;
+            height: 450px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-radius: 10px;
+            background-color: #ffffff;
+            margin-bottom: 15px;
+            border: 1px solid rgba(139, 69, 19, 0.2);
+        }
+
+        .dog-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dog-breed {
+            font-size: 24px;
+            margin: 15px 0 5px 0;
+            font-weight: bold;
+        }
+
+        #hit-result {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .error-msg {
+            color: var(--primary-color);
+            font-weight: bold;
+            display: none;
+        }
+
+        /* Seção do Histórico posicionada no lado esquerdo */
+        .history-section {
+            flex: 0.9;
+            width: 100%;
+            background: var(--history-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .history-section h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid var(--primary-color);
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: var(--table-header);
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .btn-delete {
+            background-color: var(--primary-color);
+            padding: 5px 10px;
+            font-size: 12px;
+            color: var(--text-accent);
+        }
+        
+        .btn-delete:hover {
+            background-color: var(--text-accent);
+            color: var(--primary-color);
+        }
+
+        .btn-next {
+            background-color: var(--primary-color);
+            margin-top: 15px;
+        }
+
+        /* Responsividade para telas menores (Tablets e Celulares) */
+        @media (max-width: 900px) {
+            .main-wrapper {
+                flex-direction: column; /* Empilha os blocos verticalmente no mobile */
+                align-items: center;
+            }
+            .img-container {
+                height: 350px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            form {
+                flex-direction: column;
+            }
+            .img-container {
+                height: 250px;
+            }
+            th, td {
+                padding: 6px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Qual é essa raça?</h1>
+        <p>tente adivinhar a raça pela imagem</p>
+    </header>
+    
+    <div class="main-wrapper">
+        
+        <main class="game-container">
+            
+            <div class="busca-container">
+                <form id="game-form">
+                    <input type="text" id="breed-input" placeholder="Digite aqui" required>
+                    <button type="submit">Enviar Palpite</button>
+                </form>
+            </div>
+
+            <p id="error-message" class="error-msg">Não foi possível carregar a imagem. Por favor, tente novamente.</p>
+
+            <div id="card" class="dog-card">
+                <div class="img-container">
+                    <img id="dog-img" src="" alt="Foto do Cão Secreto">
+                </div>
+                
+                <h2 id="dog-name" class="dog-breed">Qual é a raça?</h2>
+                <p id="hit-result"></p>
+                
+                <button id="btn-next-pet" class="btn-next" style="display: none;">Próximo cachorro</button>
+            </div>
+        </main>
+
+        <div class="history-section">
+            <h3>Histórico de Tentativas</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Raça Real</th>
+                        <th>Seu Palpite</th>
+                        <th>Resultado</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        // Elementos do DOM mapeados de forma clara e legível
+        const gameForm = document.getElementById('game-form');
+        const breedInput = document.getElementById('breed-input');
+        const dogImg = document.getElementById('dog-img');
+        const dogName = document.getElementById('dog-name');
+        const hitResult = document.getElementById('hit-result');
+        const card = document.getElementById('card');
+        const errorMessage = document.getElementById('error-message');
+        const historyTbody = document.getElementById('history-tbody');
+        const btnNextPet = document.getElementById('btn-next-pet');
+
+        // Configurações Globais da Aplicação
+        const API_URL = 'https://dog.ceo/api/breeds/image/random';
+        let secretBreed = '';
+        let currentId = 0;
+        
+        // REQUISITO 3: Carrega os dados persistidos no navegador
+        let viewedDogs = JSON.parse(localStorage.getItem('viewed_dogs')) || [];
+
+        // REQUISITO 2: Consumo assíncrono da API através do fetch()
+        function buscarProximoCachorro() {
+            breedInput.value = '';
+            breedInput.disabled = false;
+            gameForm.querySelector('button').disabled = false;
+            hitResult.textContent = '';
+            dogName.textContent = 'Qual é a raça?';
+            btnNextPet.style.display = 'none';
+
+            fetch(API_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error("Erro de conexão");
+                    return response.json();
+                })
+                .then(data => {
+                    const imageUrl = data.message;
+                    
+                    // Tratamento simples da string da URL para obter o nome do cão
+                    const urlParts = imageUrl.split('/breeds/');
+                    let extractedBreed = urlParts[1] ? urlParts[1].split('/')[0] : 'vira-lata';
+                    
+                    secretBreed = extractedBreed.replace('-', ' ').toLowerCase();
+                    currentId = Date.now(); // Criação de ID único via timestamp
+
+                    // REQUISITO 4: Alteração dinâmica do DOM inserindo a imagem recebida
+                    dogImg.src = imageUrl; 
+                    card.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                })
+                .catch(error => {
+                    card.style.display = 'none';
+                    errorMessage.style.display = 'block';
+                    console.error("Falha ao obter imagem:", error);
+                });
+        }
+
+        // Validação e fluxo lógico do palpite enviado
+        gameForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const guess = breedInput.value.trim().toLowerCase();
+            dogName.textContent = `Raça: ${secretBreed}`;
+
+            const isCorrect = (guess === secretBreed);
+
+            // Respostas integradas estritamente na paleta de cores original do código
+            if (isCorrect) {
+                hitResult.textContent = 'Parabéns! Você acertou a raça.';
+                hitResult.style.color = 'var(--primary-color)';
+                hitResult.style.opacity = '1';
+            } else {
+                hitResult.textContent = `Resposta incorreta. O correto era: ${secretBreed}`;
+                hitResult.style.color = 'var(--primary-color)';
+                hitResult.style.opacity = '0.75';
+            }
+
+            breedInput.disabled = true;
+            gameForm.querySelector('button').disabled = true;
+            btnNextPet.style.display = 'inline-block';
+
+            // Estrutura simples de dados representando o objeto da tentativa
+            const novaTentativa = {
+                id: currentId,
+                realBreed: secretBreed,
+                guessedBreed: guess,
+                isCorrect: isCorrect
+            };
+            
+            viewedDogs.push(novaTentativa);
+            salvarERenderizar();
+        });
+
+        btnNextPet.addEventListener('click', buscarProximoCachorro);
+
+        // REQUISITO 3: Salvamento e persistência das informações locais
+        function salvarERenderizar() {
+            localStorage.setItem('viewed_dogs', JSON.stringify(viewedDogs)); 
+            renderizarTabelaHistorico();
+        }
+
+        // REQUISITO 4: Geração dinâmica das linhas da tabela de histórico
+        function renderizarTabelaHistorico() {
+            historyTbody.innerHTML = ''; 
+
+            viewedDogs.forEach(dog => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="text-transform: capitalize; font-weight: bold;">${dog.realBreed}</td>
+                    <td>${dog.guessedBreed}</td>
+                    <td style="color: var(--primary-color); font-weight: bold; ${!dog.isCorrect ? 'opacity: 0.65;' : ''}">
+                        ${dog.isCorrect ? 'Acertou' : 'Errou'}
+                    </td>
+                    <td>
+                        <button class="btn-delete" onclick="removerRegistro(${dog.id})">Remover</button>
+                    </td>
+                `;
+                historyTbody.appendChild(row);
+            });
+        }
+
+        // Remove um item do array e sincroniza com o localStorage
+        function removerRegistro(id) {
+            viewedDogs = viewedDogs.filter(dog => dog.id !== id);
+            salvarERenderizar();
+        }
+
+        // Expõe a função de remoção ao escopo global para o funcionamento do onclick dinâmico
+        window.removerRegistro = removerRegistro;
+
+        // Dispara o carregamento inicial assim que a árvore do DOM estiver pronta
+        document.addEventListener('DOMContentLoaded', () => {
+            buscarProximoCachorro();
+            renderizarTabelaHistorico();
+        });
+    </script>
+</body>
+</html>
